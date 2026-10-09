@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Khatrina Misuari | Celestial Space</title>
+  <style>
+    :root {
+      --bg: #05020a;
+      --card-bg: rgba(18, 10, 28, 0.82);
+      --purple: #8b5cf6;
+      --red: #ef4444;
+      --border: rgba(139, 92, 246, 0.3);
+      --text: #f3f4f6;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      user-select: none;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #spaceCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1;
+      pointer-events: auto;
+    }
+
+    .ui-layer {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 780px;
+      padding: 20px;
+      pointer-events: none;
+    }
+
+    .interactive {
+      pointer-events: auto;
+    }
+
+    /* Header Meter */
+    .header-bar {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px 24px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 0 25px rgba(139, 92, 246, 0.2);
+    }
+
+    .title-text {
+      font-size: 1.3rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #a78bfa, #f43f5e);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: 1px;
+    }
+
+    .score-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .progress-track {
+      width: 140px;
+      height: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .progress-fill {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, #8b5cf6, #ef4444);
+      transition: width 0.5s ease;
+      box-shadow: 0 0 10px #ef4444;
+    }
+
+    /* Slide Box */
+    .slide-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 32px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), 0 0 30px rgba(139, 92, 246, 0.15);
+      animation: fadeIn 0.6s ease forwards;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .slide-title {
+      font-size: 1.5rem;
+      margin-bottom: 12px;
+      color: #e9d5ff;
+      line-height: 1.4;
+    }
+
+    .slide-desc {
+      font-size: 0.95rem;
+      color: #9ca3af;
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .option-btn {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      padding: 14px 20px;
+      color: #e5e7eb;
+      font-size: 1rem;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .option-btn:hover {
+      background: rgba(139, 92, 246, 0.2);
+      border-color: #a78bfa;
+      transform: translateX(4px);
+    }
+
+    .option-btn.selected-correct {
+      background: rgba(34, 197, 94, 0.2) !important;
+      border-color: #4ade80 !important;
+      color: #4ade80;
+    }
+
+    .option-btn.selected-wrong {
+      background: rgba(239, 68, 68, 0.2) !important;
+      border-color: #f87171 !important;
+      color: #f87171;
+    }
+
+    /* Portal Selection Buttons */
+    .portal-nav {
+      margin-top: 24px;
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+    }
+
+    .portal-btn {
+      background: linear-gradient(135deg, #7c3aed, #dc2626);
+      border: none;
+      border-radius: 12px;
+      padding: 12px 24px;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 0 15px rgba(124, 58, 237, 0.4);
+      display: none;
+    }
+
+    .portal-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 25px rgba(220, 38, 38, 0.7);
+    }
+
+    /* Final Memory Page */
+    .final-memory {
+      text-align: center;
+      padding: 20px 10px;
+    }
+
+    .final-quote {
+      font-size: 1.4rem;
+      font-style: italic;
+      color: #f43f5e;
+      margin: 20px 0;
+      line-height: 1.6;
+      text-shadow: 0 0 12px rgba(244, 63, 94, 0.5);
+    }
+
+    .planet-tooltip {
+      position: fixed;
+      background: rgba(10, 5, 20, 0.9);
+      border: 1px solid #8b5cf6;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      color: #e9d5ff;
+      pointer-events: none;
+      z-index: 100;
+      display: none;
+      box-shadow: 0 0 15px rgba(139, 92, 246, 0.5);
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="spaceCanvas"></canvas>
+  <div id="tooltip" class="planet-tooltip"></div>
+
+  <div class="ui-layer">
+    <div class="header-bar interactive">
+      <div class="title-text">Khatrina Misuari</div>
+      <div class="score-container">
+        <span style="font-size: 0.85rem; color: #a78bfa;">Affinity</span>
+        <div class="progress-track">
+          <div id="progressFill" class="progress-fill"></div>
+        </div>
+        <span id="scoreText" style="font-weight: bold; width: 45px;">0%</span>
+      </div>
+    </div>
+
+    <div id="slideContainer" class="slide-card interactive">
+      <!-- Slides will render here dynamically -->
+    </div>
+  </div>
+
+  <script>
+    // --- Canvas & Planetary Background Setup ---
+    const canvas = document.getElementById('spaceCanvas');
+    const ctx = canvas.getContext('2d');
+    const tooltip = document.getElementById('tooltip');
+
+    let width, height;
+    function resize() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // Celestial Objects
+    const stars = Array.from({ length: 160 }, () => ({
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * window.innerHeight,
+      size: Math.random() * 2,
+      alpha: Math.random(),
+      speed: 0.005 + Math.random() * 0.015
+    }));
+
+    const planets = [
+      { name: "Sun", x: 0.15, y: 0.25, radius: 38, color: "#f59e0b", glow: "#fbbf24", hovered: false },
+      { name: "Saturn (Khatrina's Favorite)", x: 0.82, y: 0.3, radius: 32, color: "#eab308", ring: true, glow: "#fef08a", hovered: false, lore: "Feels alone, lost in thoughts." },
+      { name: "Black Hole Void", x: 0.5, y: 0.85, radius: 28, color: "#000000", border: "#8b5cf6", glow: "#a855f7", hovered: false },
+      { name: "Hydrangea Bloom Planet", x: 0.18, y: 0.75, radius: 22, color: "#a855f7", glow: "#c084fc", hovered: false },
+      { name: "Frieren Elven Portal", x: 0.85, y: 0.78, radius: 24, color: "#38bdf8", glow: "#7dd3fc", hovered: false }
+    ];
+
+    let mouseX = -100, mouseY = -100;
+
+    canvas.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+      checkPlanetHover();
+    });
+
+    function checkPlanetHover() {
+      let hoveringAny = false;
+      planets.forEach(p => {
+        const px = p.x * width;
+        const py = p.y * height;
+        const dist = Math.hypot(mouseX - px, mouseY - py);
+        
+        if (dist < p.radius + 10) {
+          p.hovered = true;
+          hoveringAny = true;
+          tooltip.style.display = 'block';
+          tooltip.style.left = (mouseX + 15) + 'px';
+          tooltip.style.top = (mouseY + 15) + 'px';
+          tooltip.innerHTML = `<strong>${p.name}</strong>${p.lore ? '<br><small>' + p.lore + '</small>' : ''}`;
+        } else {
+          p.hovered = false;
+        }
+      });
+      if (!hoveringAny) tooltip.style.display = 'none';
+    }
+
+    function drawSpace() {
+      ctx.fillStyle = '#05020a';
+      ctx.fillRect(0, 0, width, height);
+
+      // Draw Twinkling Stars
+      stars.forEach(s => {
+        s.alpha += s.speed;
+        if (s.alpha > 1 || s.alpha < 0) s.speed = -s.speed;
+        ctx.fillStyle = `rgba(255, 255, 255, ${Math.abs(s.alpha)})`;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // Draw Celestial Bodies
+      planets.forEach(p => {
+        const px = p.x * width;
+        const py = p.y * height;
+        const radius = p.hovered ? p.radius * 1.25 : p.radius;
+
+        // Radial Glow
+        const glowGradient = ctx.createRadialGradient(px, py, radius * 0.2, px, py, radius * 2.2);
+        glowGradient.addColorStop(0, p.glow);
+        glowGradient.addColorStop(1, 'transparent');
+        ctx.fillStyle = glowGradient;
+        ctx.beginPath();
+        ctx.arc(px, py, radius * 2.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Base Planet
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(px, py, radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        if (p.border) {
+          ctx.strokeStyle = p.border;
+          ctx.lineWidth = 3;
+          ctx.stroke();
+        }
+
+        // Saturn Ring Effect
+        if (p.ring) {
+          ctx.strokeStyle = "rgba(250, 204, 21, 0.6)";
+          ctx.lineWidth = 6;
+          ctx.beginPath();
+          ctx.ellipse(px, py, radius * 2, radius * 0.5, Math.PI / 6, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      });
+
+      requestAnimationFrame(drawSpace);
+    }
+    drawSpace();
+
+    // --- Quiz Data & State ---
+    const questions = [
+      {
+        title: "Page 1: Celestial Origins",
+        desc: "First of all, when does Khatrina's birth signal illuminate the galaxy?",
+        options: ["December 18, 2006", "November 24, 2005", "October 12, 2006", "January 04, 2007"],
+        correct: 0
+      },
+      {
+        title: "Page 2: Flora of the Stars",
+        desc: "Which flower carries her deepest aesthetic connection?",
+        options: ["Goth Black Rose", "Hydrangea", "Midnight Lotus", "Spider Lily"],
+        correct: 1
+      },
+      {
+        title: "Page 3: Cosmic Palette",
+        desc: "Select the four colors that represent her aura:",
+        options: [
+          "Cyan, Yellow, Pink, Gold",
+          "Black, White, Purple, Red",
+          "Emerald, Violet, Crimson, Black",
+          "Maroon, Obsidian, Lavender, Rose"
+        ],
+        correct: 1
+      },
+      {
+        title: "Page 4: The Solitary Planet",
+        desc: "Her favorite planet symbolizes someone who feels alone, lost in their own thoughts, far away from everyone. Which planet is it?",
+        options: ["Neptune", "Pluto", "Saturn", "Mars"],
+        correct: 2
+      },
+      {
+        title: "Page 5: Elven Resonance",
+        desc: "She loves elves so much, especially the quiet, timeless mage who resembles her spirit. Who is she?",
+        options: ["Emilia", "Marcille", "Frieren", "Deedlit"],
+        correct: 2
+      },
+      {
+        title: "Page 6: Digital Chaos & Audio",
+        desc: "What is her favorite show alongside her top dark ambient musical artists?",
+        options: [
+          "Hazbin Hotel | Deftones & Arctic Monkeys",
+          "The Amazing Digital Circus | Sleep Token & The Weeknd",
+          "Cyberpunk Edgerunners | Joji & Frank Ocean",
+          "Murder Drones | Chase Atlantic & Lana Del Rey"
+        ],
+        correct: 1
+      },
+      {
+        title: "Page 7: Gaming Identities",
+        desc: "Which set of handles belong to her on Roblox, Minecraft, and Call of Duty Mobile?",
+        options: [
+          "Roblox: ZERODARK02 | MC: DARK0026497 | CODM: KeiraIsHere",
+          "Roblox: KHAT_DARK | MC: ZERO_DARK | CODM: KhatrinaCODM",
+          "Roblox: DARK_GOTH | MC: KEIRA2006 | CODM: ZeroDark",
+          "Roblox: KEIRA02 | MC: KHAT_ZERO | CODM: DarkQueen"
+        ],
+        correct: 0
+      },
+      {
+        title: "Page 8: The Desired Ideal",
+        desc: "What traits describe the guy she's into and her true love language?",
+        options: [
+          "Short, funny, loves sports | Quality Time",
+          "Tall, smart guy with emotional intelligence & bowl haircut | Physical Touch",
+          "Quiet, gym rat, dark hair | Words of Affirmation",
+          "Academic genius, long hair | Receiving Gifts"
+        ],
+        correct: 1
+      },
+      {
+        title: "Page 9: The Dual Nature",
+        desc: "She is controlling and independent, but when she is truly in love, how does she transform?",
+        options: [
+          "Distant and quiet",
+          "Wild and obedient",
+          "Overprotective and competitive",
+          "Shy and timid"
+        ],
+        correct: 1
+      },
+      {
+        title: "Page 10: The Unspoken Darkness",
+        desc: "She carries a deep darkness inside her, believing in science and carrying profound thoughts. Do you truly match her gaming skills and her mind?",
+        options: [
+          "Yes, I can match her in everything and understand her darkness.",
+          "I will try my best to keep up.",
+          "No, she is completely unmatchable.",
+          "I only care about playing video games with her."
+        ],
+        correct: 0
+      }
+    ];
+
+    let currentStep = 0;
+    let totalScore = 0;
+
+    const slideContainer = document.getElementById('slideContainer');
+    const progressFill = document.getElementById('progressFill');
+    const scoreText = document.getElementById('scoreText');
+
+    function renderSlide() {
+      if (currentStep < questions.length) {
+        const q = questions[currentStep];
+        slideContainer.innerHTML = `
+          <div class="slide-title">${q.title}</div>
+          <div class="slide-desc">${q.desc}</div>
+          <div class="options-grid">
+            ${q.options.map((opt, i) => `
+              <button class="option-btn" onclick="selectAnswer(${i})">
+                <span>${opt}</span>
+                <span style="font-size: 0.8rem; opacity: 0.5;">❖</span>
+              </button>
+            `).join('')}
+          </div>
+          <div class="portal-nav">
+            <button id="portalBtn" class="portal-btn" onclick="nextSlide()">Step Through Portal ➔</button>
+          </div>
+        `;
+      } else {
+        renderFinalPage();
+      }
+    }
+
+    function selectAnswer(index) {
+      const q = questions[currentStep];
+      const buttons = document.querySelectorAll('.option-btn');
+      
+      buttons.forEach((btn, i) => {
+        btn.disabled = true;
+        if (i === q.correct) {
+          btn.classList.add('selected-correct');
+        } else if (i === index) {
+          btn.classList.add('selected-wrong');
+        }
+      });
+
+      if (index === q.correct) {
+        totalScore += 10;
+        updateScoreUI();
+      }
+
+      document.getElementById('portalBtn').style.display = 'inline-block';
+    }
+
+    function updateScoreUI() {
+      progressFill.style.width = `${totalScore}%`;
+      scoreText.innerText = `${totalScore}%`;
+    }
+
+    function nextSlide() {
+      currentStep++;
+      renderSlide();
+    }
+
+    function renderFinalPage() {
+      const is100Percent = totalScore === 100;
+      slideContainer.innerHTML = `
+        <div class="final-memory">
+          <div class="slide-title" style="font-size: 2rem;">
+            ${is100Percent ? "100% Match — The Person I Love" : "Cosmic Orbit Complete"}
+          </div>
+          
+          <p style="color: #d1d5db; margin: 15px 0;">
+            ${is100Percent 
+              ? "You know every single piece of her universe—from the hydrangeas and dark music to her deep solitary Saturn heart." 
+              : `You scored ${totalScore}%. Even through the dark stars, her essence shines standard and unique.`}
+          </p>
+
+          <div class="final-quote">
+            "If ever we didn't end up together, i made this website so you'll never forget about me."
+          </div>
+
+          <p style="color: #9ca3af; font-size: 0.85rem; margin-top: 20px;">
+            Dedicated to <strong>Khatrina Misuari</strong> • Born Dec 18, 2006
+          </p>
+        </div>
+      `;
+    }
+
+    // Initialize First Slide
+    renderSlide();
+  </script>
+</body>
+</html>
